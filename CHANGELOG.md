@@ -1,3 +1,7 @@
 ## 1.0.0
 
-- Initial version.
+- Initial Library.
+
+## 1.0.1
+
+- Fix export class.
