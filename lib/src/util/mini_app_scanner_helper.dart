@@ -51,12 +51,12 @@ String toPackageImportUri({
       .replaceAll(r'\', '/');
 }
 
-// Quét đầy đủ dependence từ package_config.json
+// Scan all dependencies from package_config.json
 Future<List<LibraryModel>> scanAllPackages(String repoRoot) async {
-  // Dùng Set để đảm bảo quét trùng code lib module vừa nằm trong project vừa nằm trong pubspecs
+  // Use a Set to avoid duplicating local modules and pubspec dependencies
   final Set<LibraryModel> listLibrary = {};
 
-  // 1. Package chính
+  // 1. Main package
   final mainPubspec = File(p.join(repoRoot, 'pubspec.yaml'));
   final mainName = readPubspecName(mainPubspec);
   if (mainName != null) {
@@ -65,7 +65,7 @@ Future<List<LibraryModel>> scanAllPackages(String repoRoot) async {
     );
   }
 
-  // 2. Load tất cả từ package_config.json (pub.dev + git + local path)
+  // 2. Load everything from package_config.json (pub.dev + git + local paths)
   final pathPackageConfig = p.join(repoRoot, '.dart_tool');
   final packageConfigFile = File(
     p.join(pathPackageConfig, 'package_config.json'),

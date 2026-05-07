@@ -1,45 +1,45 @@
 # Mini App Generators (Screen Registry + Merged DI)
 
-1) **Mini App Screen Registry Generator**: sinh router để map `appCode-subAppCode` → Screen entry
-2) **Mini Apps Merged DI Generator**: sinh hàm `initMiniAppMergedDI()` để khởi tạo DI cho tất cả mini app/package
+1) **Mini App Screen Registry Generator**: Generates a router mapping from `appCode-subAppCode` → Screen entry.
+2) **Mini Apps Merged DI Generator**: Generates the `initMiniAppMergedDI()` function to initialize DI for all mini apps/packages.
 
 ---
 
 ## 1) Mini App Screen Registry Generator
 
-### Công dụng
+### Purpose
 
-- Tự động hóa việc **map route/screen** cho nhiều mini app trong shell app (không cần viết tay `getScreenMiniApp()`).
-- Chuẩn hóa cách khai báo màn hình qua annotation `@MiniAppScreenEntry(...)`.
-- Giảm sai sót khi thêm màn mới: chỉ cần annotate đúng → generator tự thu thập và sinh code.
-- Tập trung quản lý điều hướng ở **Shell App**: chỉ cần 1 file anchor để sinh registry cạnh đó.
+- Automates **route/screen mapping** for multiple mini apps within a shell app (no need to manually write `getScreenMiniApp()`).
+- Standardizes screen declarations using the `@MiniAppScreenEntry(...)` annotation.
+- Reduces errors when adding new screens: just annotate correctly → the generator automatically collects and generates the code.
+- Centralizes navigation management in the **Shell App**: requires only 1 anchor file to generate the registry alongside it.
 
-### Cơ chế hoạt động
+### How it works
 
-- Quét toàn repo để tìm các class được annotate bằng:
+- Scans the entire repository to find classes annotated with:
     - `@MiniAppScreenEntry(appCode: "...", subAppCode: "...")`
-- Khi gặp **file anchor** có `@MiniAppScreenInjectable()` → sinh file registry nằm cạnh anchor.
+- When it finds an **anchor file** containing `@MiniAppScreenInjectable()`, it generates the registry file next to the anchor.
 
 ### Annotations
 
-#### 1) Entry annotation (gắn trên screen)
+#### 1) Entry Annotation (Attached to the screen)
 
 ```dart
 @MiniAppScreenEntry(appCode: "home-app", subAppCode: "sub-home-app")
 class HomeApp2Screen extends BaseMiniAppScreen {}
 ```
 
-- `appCode` (**bắt buộc**): mã định danh mini app để route tới đúng entry screen.
-- `subAppCode` (tùy chọn): dùng khi cùng `appCode` nhưng khác entry screen.
+- `appCode` (**required**): The unique identifier for the mini app to route to the correct entry screen.
+- `subAppCode` (optional): Used when multiple entry screens share the same `appCode`.
 
-#### 2) Anchor marker (nơi sinh output)
+#### 2) Anchor Marker (Output destination)
 
 ```dart
 @MiniAppScreenInjectable()
 class MiniAppRegistryAnchor {}
 ```
 
-### Output được sinh ra
+### Generated Output
 
 Anchor:
 ```
@@ -55,38 +55,38 @@ lib/shell_app_di_screen.mini_screen.g.dart
 
 ## 2) Mini Apps Merged DI Generator
 
-### Công dụng
+### Purpose
 
-- Tự động hóa việc **khởi tạo DI cho toàn bộ mini app / package**.
-- Tránh việc import và gọi DI thủ công trong shell app.
-- Đảm bảo chỉ có **1 entrypoint DI** duy nhất.
+- Automates **DI initialization for the entire mini app / package ecosystem**.
+- Avoids manual importing and DI calling in the shell app.
+- Ensures there is only **1 single DI entrypoint**.
 
-### Cơ chế hoạt động
+### How it works
 
-- Quét toàn repo để tìm:
-    - Function / method có `@MiniAppDISetup()`
-- Khi gặp **anchor** có `@MergedMiniAppDI()`:
-    - Sinh file `.g.dart` chứa hàm `initMergedMiniAppDI()`
+- Scans the entire repository to find:
+    - Functions / methods annotated with `@MiniAppDISetup()`
+- When it finds an **anchor** containing `@MergedMiniAppDI()`:
+    - Generates a `.g.dart` file containing the `initMergedMiniAppDI()` function.
 
-> Generator sử dụng **AST Scan (Dart Analyzer)**, không dùng build_runner.
+> The generator uses **AST Scanning (Dart Analyzer)**, avoiding the heavy `build_runner`.
 
 ### Annotations
 
-#### 1) DI setup annotation
+#### 1) DI Setup Annotation
 
 ```dart
 @MiniAppDISetup()
 void initAuthenticateDI() {}
 ```
 
-#### 2) Anchor marker
+#### 2) Anchor Marker
 
 ```dart
 @MergedMiniAppDI()
 class Injector {}
 ```
 
-### Output
+### Generated Output
 
 Anchor:
 ```
@@ -98,7 +98,7 @@ Output:
 lib/src/di/injection.g.dart
 ```
 
-Ví dụ:
+Example output content:
 
 ```dart
 void initMiniAppMergedDI() {
@@ -108,7 +108,17 @@ void initMiniAppMergedDI() {
 
 ---
 
-## 3) Cách chạy file gen :
+## 3) How to run the generator
 
-tự tạo main example và run generateInjectAnnotation()
+Create a `main` example script and run `generateInjectAnnotation()`:
 
+```dart
+import 'package:fl_inject/fl_inject.dart';
+
+void main() {
+  generateInjectAnnotation(
+    listGen: [MiniAppScreenGenerate(), MiniAppMergedDiGenerate()],
+  );
+}
+```
+*(Tip: If you use `melos`, add this script to your `melos.yaml` hooks to run automatically!)*

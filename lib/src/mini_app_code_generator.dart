@@ -13,7 +13,7 @@ void generateInjectAnnotation<T>({
   String? pathRoot,
   required List<BaseGenerate> listGen,
 }) async {
-  print('🚀 Bắt đầu quá trình generate...');
+  print('🚀 Starting the generation process...');
 
   // === Scan Only Once ===
   final repoRoot = pathRoot ?? findRepoRoot(Directory.current.path);
@@ -21,7 +21,7 @@ void generateInjectAnnotation<T>({
 
   // ==================== Scan all file in project ====================
   print('Scanning . . .');
-  // Tạo AnalysisContextCollection
+  // Create AnalysisContextCollection
   final collection = AnalysisContextCollection(
     includedPaths: allPackage.map((LibraryModel e) => e.path).toList(),
     resourceProvider: PhysicalResourceProvider.INSTANCE,
@@ -95,14 +95,20 @@ void generateInjectAnnotation<T>({
 
   for (var element in listGen) {
     var anchor = listAnchorPathMap[element] ?? "$repoRoot/lib/gen/${element.runtimeType.toString()}.dart".replaceAll('\\', '/');
-    // Thực hiện tìm import uri cho các entry
+    File file = File(anchor);
+    if (file.existsSync()) {
+      file.deleteSync();
+    }
+    // Resolve import URIs for entries
     var list = listEntryMap[element]?.map((e) {
       e.pathImportUri = toPackageImportUri(anchorPath: anchor, model: e);
       return e;
     }).toList();
-    var isWriteSuccess = element.writeGenerateFile(list, anchor);
-    if (!isWriteSuccess) {
-      print('⚠️ No destination folder: $anchor');
+    if (list?.isNotEmpty == true) {
+      var isWriteSuccess = element.writeGenerateFile(list, anchor);
+      if (!isWriteSuccess) {
+        print('⚠️ No destination folder: $anchor');
+      }
     }
   }
 
